@@ -10,7 +10,7 @@ mod one_liners;
 mod password;
 mod prompt;
 mod select;
-#[cfg(test)]
+#[cfg(all(test, not(feature = "no-tty")))]
 pub(crate) mod test;
 mod text;
 

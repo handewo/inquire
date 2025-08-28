@@ -2,7 +2,7 @@ mod action;
 mod config;
 mod prompt;
 #[cfg(test)]
-#[cfg(feature = "crossterm")]
+#[cfg(all(feature = "crossterm", not(feature = "no-tty")))]
 mod test;
 
 pub use action::*;
@@ -243,8 +243,17 @@ impl<'a> DateSelect<'a> {
     ///
     /// Meanwhile, if the user does submit an answer, the method wraps the return
     /// type with `Some`.
-    pub fn prompt_skippable(self) -> InquireResult<Option<NaiveDate>> {
-        match self.prompt() {
+    pub fn prompt_skippable(
+        self,
+        #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
+        #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+    ) -> InquireResult<Option<NaiveDate>> {
+        match self.prompt(
+            #[cfg(feature = "no-tty")]
+            event,
+            #[cfg(feature = "no-tty")]
+            sender,
+        ) {
             Ok(answer) => Ok(Some(answer)),
             Err(InquireError::OperationCanceled) => Ok(None),
             Err(err) => Err(err),
@@ -253,8 +262,16 @@ impl<'a> DateSelect<'a> {
 
     /// Parses the provided behavioral and rendering options and prompts
     /// the CLI user for input according to the defined rules.
-    pub fn prompt(self) -> InquireResult<NaiveDate> {
+    pub fn prompt(
+        self,
+        #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
+        #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+    ) -> InquireResult<NaiveDate> {
+        #[cfg(not(feature = "no-tty"))]
         let (input_reader, terminal) = get_default_terminal()?;
+        #[cfg(feature = "no-tty")]
+        let (input_reader, terminal) = get_default_terminal(event, sender)?;
+
         let mut backend = Backend::new(input_reader, terminal, self.render_config)?;
         self.prompt_with_backend(&mut backend)
     }
