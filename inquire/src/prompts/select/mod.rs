@@ -2,7 +2,7 @@ mod action;
 mod config;
 mod prompt;
 #[cfg(test)]
-#[cfg(feature = "crossterm")]
+#[cfg(all(feature = "crossterm", not(feature = "no-tty")))]
 mod test;
 
 pub use action::*;
@@ -304,8 +304,18 @@ where
     /// the CLI user for input according to the defined rules.
     ///
     /// Returns the owned object selected by the user.
-    pub fn prompt(self) -> InquireResult<T> {
-        self.raw_prompt().map(|op| op.value)
+    pub fn prompt(
+        self,
+        #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
+        #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+    ) -> InquireResult<T> {
+        self.raw_prompt(
+            #[cfg(feature = "no-tty")]
+            event,
+            #[cfg(feature = "no-tty")]
+            sender,
+        )
+        .map(|op| op.value)
     }
 
     /// Parses the provided behavioral and rendering options and prompts
@@ -317,8 +327,17 @@ where
     ///
     /// Meanwhile, if the user does submit an answer, the method wraps the return
     /// type with `Some`.
-    pub fn prompt_skippable(self) -> InquireResult<Option<T>> {
-        match self.prompt() {
+    pub fn prompt_skippable(
+        self,
+        #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
+        #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+    ) -> InquireResult<Option<T>> {
+        match self.prompt(
+            #[cfg(feature = "no-tty")]
+            event,
+            #[cfg(feature = "no-tty")]
+            sender,
+        ) {
             Ok(answer) => Ok(Some(answer)),
             Err(InquireError::OperationCanceled) => Ok(None),
             Err(err) => Err(err),
@@ -330,8 +349,16 @@ where
     ///
     /// Returns a [`ListOption`](crate::list_option::ListOption) containing
     /// the index of the selection and the owned object selected by the user.
-    pub fn raw_prompt(self) -> InquireResult<ListOption<T>> {
+    pub fn raw_prompt(
+        self,
+        #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
+        #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+    ) -> InquireResult<ListOption<T>> {
+        #[cfg(not(feature = "no-tty"))]
         let (input_reader, terminal) = get_default_terminal()?;
+        #[cfg(feature = "no-tty")]
+        let (input_reader, terminal) = get_default_terminal(event, sender)?;
+
         let mut backend = Backend::new(input_reader, terminal, self.render_config)?;
         self.prompt_with_backend(&mut backend)
     }

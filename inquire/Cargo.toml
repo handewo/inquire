@@ -22,6 +22,7 @@ doctest = true
 [features]
 default = ["macros", "crossterm", "one-liners", "fuzzy"]
 macros = []
+no-tty = ["crossterm/no-tty", "tokio"]
 one-liners = []
 date = ["chrono"]
 editor = ["tempfile"]
@@ -32,7 +33,7 @@ all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
 
 [dependencies]
-crossterm = { version = "0.25", optional = true }
+crossterm = { git = "https://github.com/handewo/crossterm.git", optional = true }
 termion = { version = "2.0", optional = true }
 console = { version = "0.15", optional = true, features = [
   "windows-console-colors",
@@ -43,6 +44,7 @@ chrono = { version = "0.4", optional = true }
 tempfile = { version = "3", optional = true }
 
 fuzzy-matcher = { version = "0.3.7", default-features = false, optional = true }
+tokio = { version = "1", optional = true, features = ["sync"] }
 
 bitflags = "2"
 dyn-clone = "1"

@@ -5,9 +5,13 @@ use crate::{
     ui::{dimension::Dimension, InputReader, Styled},
 };
 
-#[cfg(feature = "crossterm")]
-#[cfg_attr(docsrs, doc(cfg(feature = "crossterm")))]
+#[cfg(all(feature = "crossterm", not(feature = "no-tty")))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "crossterm", not(feature = "no-tty")))))]
 pub mod crossterm;
+
+#[cfg(all(feature = "crossterm", feature = "no-tty"))]
+#[cfg_attr(docsrs, doc(cfg(all(feature = "crossterm", feature = "no-tty"))))]
+pub mod no_tty;
 
 #[cfg(feature = "termion")]
 #[cfg_attr(docsrs, doc(cfg(feature = "termion")))]
@@ -43,11 +47,20 @@ pub trait Terminal: Sized {
     fn flush(&mut self) -> Result<()>;
 }
 
-pub fn get_default_terminal() -> InquireResult<(impl InputReader, impl Terminal)> {
-    #[cfg(feature = "crossterm")]
+pub fn get_default_terminal(
+    #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
+    #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+) -> InquireResult<(impl InputReader, impl Terminal)> {
+    #[cfg(all(feature = "crossterm", not(feature = "no-tty")))]
     return Ok((
         crossterm::CrosstermKeyReader::new(),
         crossterm::CrosstermTerminal::new()?,
+    ));
+
+    #[cfg(all(feature = "crossterm", feature = "no-tty"))]
+    return Ok((
+        no_tty::CrosstermKeyReader::new(event.clone()),
+        no_tty::CrosstermTerminal::new(sender, event)?,
     ));
 
     #[cfg(all(feature = "termion", not(feature = "crossterm")))]
