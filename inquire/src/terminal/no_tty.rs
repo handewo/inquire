@@ -1,5 +1,4 @@
 use std::io::{Result, Write};
-use tokio::sync::mpsc::Sender;
 
 use crossterm::{
     cursor,
@@ -43,13 +42,10 @@ impl InputReader for CrosstermKeyReader {
 }
 
 impl CrosstermTerminal {
-    pub fn new(sender: Sender<Vec<u8>>, event: NoTtyEvent) -> InquireResult<Self> {
+    pub fn new(sender: SenderWriter, event: NoTtyEvent) -> InquireResult<Self> {
         terminal::enable_raw_mode()?;
 
-        Ok(Self {
-            sender: SenderWriter::new(sender),
-            event,
-        })
+        Ok(Self { sender, event })
     }
 
     fn get_writer(&mut self) -> &mut dyn Write {

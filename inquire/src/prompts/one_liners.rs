@@ -35,7 +35,7 @@ use crate::{error::InquireResult, Confirm, CustomType, Password, Text};
 pub fn prompt_confirmation<M>(
     message: M,
     #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
 ) -> InquireResult<bool>
 where
     M: AsRef<str>,
@@ -79,7 +79,7 @@ where
 pub fn prompt_text<M>(
     message: M,
     #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
 ) -> InquireResult<String>
 where
     M: AsRef<str>,
@@ -123,7 +123,7 @@ where
 pub fn prompt_secret<M>(
     message: M,
     #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
 ) -> InquireResult<String>
 where
     M: AsRef<str>,
@@ -168,7 +168,7 @@ where
 pub fn prompt_date<M>(
     message: M,
     #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
 ) -> InquireResult<chrono::NaiveDate>
 where
     M: AsRef<str>,
@@ -212,7 +212,7 @@ where
 pub fn prompt_f64<M>(
     message: M,
     #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
 ) -> InquireResult<f64>
 where
     M: AsRef<str>,
@@ -256,7 +256,7 @@ where
 pub fn prompt_f32<M>(
     message: M,
     #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
 ) -> InquireResult<f32>
 where
     M: AsRef<str>,
@@ -300,7 +300,7 @@ where
 pub fn prompt_u64<M>(
     message: M,
     #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
 ) -> InquireResult<u64>
 where
     M: AsRef<str>,
@@ -344,7 +344,7 @@ where
 pub fn prompt_u32<M>(
     message: M,
     #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
 ) -> InquireResult<u32>
 where
     M: AsRef<str>,
@@ -388,7 +388,7 @@ where
 pub fn prompt_usize<M>(
     message: M,
     #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
 ) -> InquireResult<usize>
 where
     M: AsRef<str>,
@@ -432,7 +432,7 @@ where
 pub fn prompt_u128<M>(
     message: M,
     #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
 ) -> InquireResult<u128>
 where
     M: AsRef<str>,
