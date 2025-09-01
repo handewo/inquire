@@ -3,7 +3,7 @@ use tokio::sync::mpsc::Sender;
 
 use crossterm::{
     cursor,
-    event::{self, KeyCode, KeyEvent, KeyModifiers, NoTtyEvent},
+    event::{self, KeyCode, KeyEvent, KeyModifiers, NoTtyEvent, SenderWriter},
     queue,
     style::{Attribute, Color, Print, SetAttribute, SetBackgroundColor, SetForegroundColor},
     terminal::{self, ClearType},
@@ -47,7 +47,7 @@ impl CrosstermTerminal {
         terminal::enable_raw_mode()?;
 
         Ok(Self {
-            sender: SenderWriter(sender),
+            sender: SenderWriter::new(sender),
             event,
         })
     }
@@ -311,22 +311,5 @@ impl From<KeyEvent> for Key {
             #[allow(deprecated)]
             _ => Self::Any,
         }
-    }
-}
-
-#[derive(Clone)]
-pub(crate) struct SenderWriter(Sender<Vec<u8>>);
-
-impl Write for SenderWriter {
-    fn write(&mut self, buf: &[u8]) -> Result<usize> {
-        self.0
-            .blocking_send(buf.to_vec())
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
-        Ok(buf.len())
-    }
-
-    fn flush(&mut self) -> Result<()> {
-        // mpsc is unbuffered; nothing to flush
-        Ok(())
     }
 }
