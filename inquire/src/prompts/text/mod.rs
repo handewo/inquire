@@ -257,7 +257,7 @@ impl<'a> Text<'a> {
     pub fn prompt_skippable(
         self,
         #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-        #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+        #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
     ) -> InquireResult<Option<String>> {
         match self.prompt(
             #[cfg(feature = "no-tty")]
@@ -276,7 +276,7 @@ impl<'a> Text<'a> {
     pub fn prompt(
         self,
         #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-        #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+        #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
     ) -> InquireResult<String> {
         #[cfg(not(feature = "no-tty"))]
         let (input_reader, terminal) = get_default_terminal()?;

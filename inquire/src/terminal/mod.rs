@@ -49,7 +49,7 @@ pub trait Terminal: Sized {
 
 pub fn get_default_terminal(
     #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
 ) -> InquireResult<(impl InputReader, impl Terminal)> {
     #[cfg(all(feature = "crossterm", not(feature = "no-tty")))]
     return Ok((

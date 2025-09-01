@@ -372,7 +372,7 @@ where
     pub fn prompt_skippable(
         self,
         #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-        #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+        #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
     ) -> InquireResult<Option<Vec<T>>> {
         match self.prompt(
             #[cfg(feature = "no-tty")]
@@ -393,7 +393,7 @@ where
     pub fn prompt(
         self,
         #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-        #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+        #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
     ) -> InquireResult<Vec<T>> {
         self.raw_prompt(
             #[cfg(feature = "no-tty")]
@@ -419,7 +419,7 @@ where
     pub fn raw_prompt_skippable(
         self,
         #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-        #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+        #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
     ) -> InquireResult<Option<Vec<ListOption<T>>>> {
         match self.raw_prompt(
             #[cfg(feature = "no-tty")]
@@ -441,7 +441,7 @@ where
     pub fn raw_prompt(
         self,
         #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-        #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+        #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
     ) -> InquireResult<Vec<ListOption<T>>> {
         #[cfg(not(feature = "no-tty"))]
         let (input_reader, terminal) = get_default_terminal()?;

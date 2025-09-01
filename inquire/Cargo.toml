@@ -22,7 +22,7 @@ doctest = true
 [features]
 default = ["macros", "crossterm", "one-liners", "fuzzy"]
 macros = []
-no-tty = ["crossterm/no-tty", "tokio"]
+no-tty = ["crossterm/no-tty"]
 one-liners = []
 date = ["chrono"]
 editor = ["tempfile"]
@@ -44,7 +44,6 @@ chrono = { version = "0.4", optional = true }
 tempfile = { version = "3", optional = true }
 
 fuzzy-matcher = { version = "0.3.7", default-features = false, optional = true }
-tokio = { version = "1", optional = true, features = ["sync"] }
 
 bitflags = "2"
 dyn-clone = "1"
