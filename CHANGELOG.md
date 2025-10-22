@@ -4,9 +4,61 @@
 
 ## [Unreleased] <!-- ReleaseDate -->
 
-- Fix autocomplete suggestions not being updated after a suggestion is accepted. Thanks @moritz-hoelting and @istudyatuni for reporting and fixing it!
-- Fix incorrect cursor placement when inputting CJK characters. Thanks @phostann (#270) for reporting it!
-- Removed unused dependency (newline-converter). Thanks @jonassmedegaard (#267) for catching it!
+- No changes since the latest release below.
+
+## [0.9.1] - 2025-09-16
+
+### Fixes
+
+- Fix panicking when terminal backend reports size with 0 width.
+
+## [0.9.0] - 2025-09-16
+
+### Features
+
+Adds `Selectable` derive macro for enums! You can now easily create enum-based prompts (e.g. menus) by using the `Selectable` derive macro on your enums.
+
+See the [example](https://github.com/mikaelmello/inquire/blob/main/examples/enum_select_derive.rs) for more details. Thank you @TheBearodactyl for the contribution!
+
+### Dependencies
+
+- Updated `unicode-width` to 0.2.
+- Updated `crossterm` to 0.29.
+- Updated `termion` to 4.0.
+- Updated `console` to 0.16.
+
+## [0.8.0] - 2025-09-14
+
+### Features
+
+- Improve end user experience when prompting for input without a message.
+- Implement `raw_prompt_skippable` for `Select`.
+
+### Fixes
+
+- Fix bug where inputs spanning 3+ lines would break text rendering.
+- Fix bug where Select and MultiSelect prompts would render the first option incorrectly when filtering is disabled.
+- Fix autocomplete suggestions not being updated after a suggestion is accepted.
+- Fix incorrect cursor placement when inputting CJK characters.
+
+### API Changes
+
+- Don't require static lifetime for autocompleter and validator.
+
+### Dependencies
+
+- Upgraded `crossterm` to 0.28.1.
+- Raised minimum supported Rust version to 1.80.0.
+- Migrate from `once_cell` to `stdlib`.
+- Migrate from `fxhash` to `stdlib`.
+- Removed unused dependency (newline-converter).
+- Fix GitHub Action outdated dependencies.
+
+### Acknowledgments
+
+Thanks to all the who helped improve this library with their feedback and contributions!
+
+@basbossink-ds, @CraftSpider, @ereOn, @istudyatuni, @jarjk, @jonassmedegaard, @Maffey, @moritz-hoelting, @phostann, @stormshield-guillaumed, @theRookieCoder, @tusharmath
 
 ## [0.7.5] - 2024-04-23
 
@@ -155,7 +207,7 @@ _The auto-completion API will be revamped for v0.4.0, watch [#69](https://github
 
 ---
 
-#### 2. Support for custom prompt prefix in finished prompts.
+#### 2. Support for custom prompt prefix in finished prompts
 
 Added `answered_prompt_prefix` configuration on `RenderConfig`, allowing users to set custom prefixes (e.g. a check mark) to prompts that have already been answered.
 
@@ -165,7 +217,7 @@ Cheers to @href for the suggestion! [#44](https://github.com/mikaelmello/inquire
 
 ---
 
-#### 3. User-provided operations can be fallible.
+#### 3. User-provided operations can be fallible
 
 Input validation, suggestions and completions are now fallible operations.
 
@@ -178,7 +230,7 @@ The return type of suggesters has also been changed to allow fallible executions
 
 ---
 
-#### 4. Validators are traits instead of closures.
+#### 4. Validators are traits instead of closures
 
 All builtin validators have been turned into traits, with structs instead of macros as implementations.
 
@@ -330,7 +382,10 @@ The library is already featureful enough to warrant a higher version number, bum
 
 <!-- next-url -->
 
-[unreleased]: https://github.com/mikaelmello/inquire/compare/v0.7.5...HEAD
+[unreleased]: https://github.com/mikaelmello/inquire/compare/v0.9.1...HEAD
+[0.9.1]: https://github.com/mikaelmello/inquire/compare/v0.9.0...v0.9.1
+[0.9.0]: https://github.com/mikaelmello/inquire/compare/v0.8.0...v0.9.0
+[0.8.0]: https://github.com/mikaelmello/inquire/compare/v0.7.5...v0.8.0
 [0.7.5]: https://github.com/mikaelmello/inquire/compare/v0.7.4...v0.7.5
 [0.7.4]: https://github.com/mikaelmello/inquire/compare/v0.7.3...v0.7.4
 [0.7.3]: https://github.com/mikaelmello/inquire/compare/v0.7.2...v0.7.3

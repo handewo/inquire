@@ -149,8 +149,8 @@ where
 /// # Returns
 ///
 /// * `InquireResult<NaiveDate>`: An enum that represents the result of the prompt operation. If the operation is successful,
-///     it returns `InquireResult::Ok(NaiveDate)` where NaiveDate's value is the date selected by the user. If the operation
-///     encounters an error, it returns `InquireResult::Err(InquireError)`.
+///   it returns `InquireResult::Ok(NaiveDate)` where NaiveDate's value is the date selected by the user. If the operation
+///   encounters an error, it returns `InquireResult::Err(InquireError)`.
 ///
 /// # Example
 ///
@@ -194,8 +194,8 @@ where
 /// # Returns
 ///
 /// * `InquireResult<f64>`: An enum that represents the result of the prompt operation. If the operation is successful,
-///     it returns `InquireResult::Ok(f64)` where f64 is the number parsed from the user's input. If the operation
-///     encounters an error, it returns `InquireResult::Err(InquireError)`.
+///   it returns `InquireResult::Ok(f64)` where f64 is the number parsed from the user's input. If the operation
+///   encounters an error, it returns `InquireResult::Err(InquireError)`.
 ///
 /// # Example
 ///
@@ -238,8 +238,8 @@ where
 /// # Returns
 ///
 /// * `InquireResult<f32>`: An enum that represents the result of the prompt operation. If the operation is successful,
-///     it returns `InquireResult::Ok(f32)` where f32 is the number parsed from the user's input. If the operation
-///     encounters an error, it returns `InquireResult::Err(InquireError)`.
+///   it returns `InquireResult::Ok(f32)` where f32 is the number parsed from the user's input. If the operation
+///   encounters an error, it returns `InquireResult::Err(InquireError)`.
 ///
 /// # Example
 ///
@@ -282,8 +282,8 @@ where
 /// # Returns
 ///
 /// * `InquireResult<u64>`: An enum that represents the result of the prompt operation. If the operation is successful,
-///     it returns `InquireResult::Ok(u64)` where u64 is the number parsed from the user's input. If the operation
-///     encounters an error, it returns `InquireResult::Err(InquireError)`.
+///   it returns `InquireResult::Ok(u64)` where u64 is the number parsed from the user's input. If the operation
+///   encounters an error, it returns `InquireResult::Err(InquireError)`.
 ///
 /// # Example
 ///
@@ -326,8 +326,8 @@ where
 /// # Returns
 ///
 /// * `InquireResult<u32>`: An enum that represents the result of the prompt operation. If the operation is successful,
-///     it returns `InquireResult::Ok(u32)` where u32 is the number parsed from the user's input. If the operation
-///     encounters an error, it returns `InquireResult::Err(InquireError)`.
+///   it returns `InquireResult::Ok(u32)` where u32 is the number parsed from the user's input. If the operation
+///   encounters an error, it returns `InquireResult::Err(InquireError)`.
 ///
 /// # Example
 ///
@@ -370,8 +370,8 @@ where
 /// # Returns
 ///
 /// * `InquireResult<usize>`: An enum that represents the result of the prompt operation. If the operation is successful,
-///     it returns `InquireResult::Ok(usize)` where usize is the number parsed from the user's input. If the operation
-///     encounters an error, it returns `InquireResult::Err(InquireError)`.
+///   it returns `InquireResult::Ok(usize)` where usize is the number parsed from the user's input. If the operation
+///   encounters an error, it returns `InquireResult::Err(InquireError)`.
 ///
 /// # Example
 ///
@@ -414,8 +414,8 @@ where
 /// # Returns
 ///
 /// * `InquireResult<u128>`: An enum that represents the result of the prompt operation. If the operation is successful,
-///     it returns `InquireResult::Ok(u128)` where u128 is the number parsed from the user's input. If the operation
-///     encounters an error, it returns `InquireResult::Err(InquireError)`.
+///   it returns `InquireResult::Ok(u128)` where u128 is the number parsed from the user's input. If the operation
+///   encounters an error, it returns `InquireResult::Err(InquireError)`.
 ///
 /// # Example
 ///
