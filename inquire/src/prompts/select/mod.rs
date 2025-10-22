@@ -351,8 +351,20 @@ where
     ///
     /// Meanwhile, if the user does submit an answer, the method wraps the return
     /// type with `Some`.
-    pub fn raw_prompt_skippable(self) -> InquireResult<Option<ListOption<T>>> {
+    pub fn raw_prompt_skippable(
+        self,
+        #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
+        #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
+    ) -> InquireResult<Option<ListOption<T>>> {
+        #[cfg(not(feature = "no-tty"))]
         match self.raw_prompt() {
+            Ok(answer) => Ok(Some(answer)),
+            Err(InquireError::OperationCanceled) => Ok(None),
+            Err(err) => Err(err),
+        }
+
+        #[cfg(feature = "no-tty")]
+        match self.raw_prompt(event, sender) {
             Ok(answer) => Ok(Some(answer)),
             Err(InquireError::OperationCanceled) => Ok(None),
             Err(err) => Err(err),
