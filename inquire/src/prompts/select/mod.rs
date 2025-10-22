@@ -375,7 +375,7 @@ where
     pub fn raw_prompt_skippable(
         self,
         #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-        #[cfg(feature = "no-tty")] sender: tokio::sync::mpsc::Sender<Vec<u8>>,
+        #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
     ) -> InquireResult<Option<ListOption<T>>> {
         #[cfg(not(feature = "no-tty"))]
         match self.raw_prompt() {

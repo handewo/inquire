@@ -125,7 +125,7 @@ impl Terminal for CrosstermTerminal {
         self.get_writer().flush()
     }
 
-    fn get_size(&self) -> Result<super::TerminalSize> {
+    fn get_size(&self) -> Result<Option<super::TerminalSize>> {
         terminal::size(&self.event).map(|(width, height)| super::TerminalSize::new(width, height))
     }
 
