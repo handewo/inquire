@@ -7,11 +7,19 @@ publish = false
 [lib]
 path = "lib.rs"
 
+[features]
+no-tty = ["crossterm/no-tty", "dep:bytes", "dep:tokio", "dep:rand", "dep:russh"]
+
 [dependencies]
+crossterm = { git = "https://github.com/handewo/crossterm.git", optional = true }
 inquire = { path = "../inquire", features = ["date", "editor", "macros"] }
 inquire-derive = { path = "../inquire-derive" }
 chrono = "0.4"
 fuzzy-matcher = "0.3.7"
+russh = { version = "0.61", optional = true }
+tokio = { version = "1", optional = true }
+bytes = { version = "1", optional = true }
+rand = { version = "0.10", optional = true }
 
 [target.'cfg(not(target_os = "windows"))'.dependencies]
 rexpect = "0.6.2"
@@ -101,3 +109,8 @@ path = "enum_comprehensive.rs"
 [[example]]
 name = "enum_select_derive"
 path = "enum_select_derive.rs"
+
+[[example]]
+name = "ssh_demo"
+path = "ssh_demo.rs"
+required-features = ["no-tty"]
