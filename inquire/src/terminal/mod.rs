@@ -74,7 +74,16 @@ pub trait Terminal: Sized {
     #[allow(unused)]
     fn cursor_move_to_column(&mut self, idx: u16) -> Result<()>;
 
+    /// Flushes any buffered output to the underlying terminal.
+    ///
+    /// Under the `no-tty` feature the output is written to an async channel
+    /// (see [`crossterm::event::SenderWriter`]), so this method is `async`.
+    #[cfg(not(feature = "no-tty"))]
     fn flush(&mut self) -> Result<()>;
+
+    /// Flushes any buffered output to the underlying async channel.
+    #[cfg(feature = "no-tty")]
+    async fn flush(&mut self) -> Result<()>;
 }
 
 pub fn get_default_terminal(

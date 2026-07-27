@@ -32,20 +32,25 @@ use crate::{error::InquireResult, Confirm, CustomType, Password, Text};
 ///
 /// This function will return an error if there is a problem interacting with the terminal, or if the user
 /// cancels the operation by pressing `Ctrl+C`.
-pub fn prompt_confirmation<M>(
+#[cfg(not(feature = "no-tty"))]
+pub fn prompt_confirmation<M>(message: M) -> InquireResult<bool>
+where
+    M: AsRef<str>,
+{
+    Confirm::new(message.as_ref()).prompt()
+}
+
+/// Async variant of [`prompt_confirmation`] for the `no-tty` feature.
+#[cfg(feature = "no-tty")]
+pub async fn prompt_confirmation<M>(
     message: M,
-    #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
+    event: crossterm::event::NoTtyEvent,
+    sender: crossterm::event::SenderWriter,
 ) -> InquireResult<bool>
 where
     M: AsRef<str>,
 {
-    Confirm::new(message.as_ref()).prompt(
-        #[cfg(feature = "no-tty")]
-        event,
-        #[cfg(feature = "no-tty")]
-        sender,
-    )
+    Confirm::new(message.as_ref()).prompt(event, sender).await
 }
 
 /// This function is a helpful one-liner to prompt the user for a text input.
@@ -76,20 +81,25 @@ where
 ///
 /// This function will return an error if there is a problem interacting with the terminal, or if the user
 /// cancels the operation by pressing `Ctrl+C`.
-pub fn prompt_text<M>(
+#[cfg(not(feature = "no-tty"))]
+pub fn prompt_text<M>(message: M) -> InquireResult<String>
+where
+    M: AsRef<str>,
+{
+    Text::new(message.as_ref()).prompt()
+}
+
+/// Async variant of [`prompt_text`] for the `no-tty` feature.
+#[cfg(feature = "no-tty")]
+pub async fn prompt_text<M>(
     message: M,
-    #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
+    event: crossterm::event::NoTtyEvent,
+    sender: crossterm::event::SenderWriter,
 ) -> InquireResult<String>
 where
     M: AsRef<str>,
 {
-    Text::new(message.as_ref()).prompt(
-        #[cfg(feature = "no-tty")]
-        event,
-        #[cfg(feature = "no-tty")]
-        sender,
-    )
+    Text::new(message.as_ref()).prompt(event, sender).await
 }
 
 /// This function is a helpful one-liner to prompt the user for a password, or any secret text.
@@ -120,20 +130,25 @@ where
 ///
 /// This function will return an error if there is a problem interacting with the terminal, or if the user
 /// cancels the operation by pressing `Ctrl+C`.
-pub fn prompt_secret<M>(
+#[cfg(not(feature = "no-tty"))]
+pub fn prompt_secret<M>(message: M) -> InquireResult<String>
+where
+    M: AsRef<str>,
+{
+    Password::new(message.as_ref()).prompt()
+}
+
+/// Async variant of [`prompt_secret`] for the `no-tty` feature.
+#[cfg(feature = "no-tty")]
+pub async fn prompt_secret<M>(
     message: M,
-    #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
+    event: crossterm::event::NoTtyEvent,
+    sender: crossterm::event::SenderWriter,
 ) -> InquireResult<String>
 where
     M: AsRef<str>,
 {
-    Password::new(message.as_ref()).prompt(
-        #[cfg(feature = "no-tty")]
-        event,
-        #[cfg(feature = "no-tty")]
-        sender,
-    )
+    Password::new(message.as_ref()).prompt(event, sender).await
 }
 
 /// This function is a helpful one-liner to prompt the user for a date.
@@ -165,20 +180,28 @@ where
 /// This function will return an error if there is a problem interacting with the terminal, or if the user
 /// cancels the operation by pressing `Ctrl+C`.
 #[cfg(feature = "date")]
-pub fn prompt_date<M>(
+#[cfg(not(feature = "no-tty"))]
+pub fn prompt_date<M>(message: M) -> InquireResult<chrono::NaiveDate>
+where
+    M: AsRef<str>,
+{
+    crate::DateSelect::new(message.as_ref()).prompt()
+}
+
+/// Async variant of [`prompt_date`] for the `no-tty` feature.
+#[cfg(feature = "date")]
+#[cfg(feature = "no-tty")]
+pub async fn prompt_date<M>(
     message: M,
-    #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
+    event: crossterm::event::NoTtyEvent,
+    sender: crossterm::event::SenderWriter,
 ) -> InquireResult<chrono::NaiveDate>
 where
     M: AsRef<str>,
 {
-    crate::DateSelect::new(message.as_ref()).prompt(
-        #[cfg(feature = "no-tty")]
-        event,
-        #[cfg(feature = "no-tty")]
-        sender,
-    )
+    crate::DateSelect::new(message.as_ref())
+        .prompt(event, sender)
+        .await
 }
 
 /// This function is a helpful one-liner to prompt the user for a number and parse it to f64.
@@ -209,20 +232,27 @@ where
 ///
 /// This function will return an error if there is a problem interacting with the terminal, or if the user
 /// cancels the operation by pressing `Ctrl+C`.
-pub fn prompt_f64<M>(
+#[cfg(not(feature = "no-tty"))]
+pub fn prompt_f64<M>(message: M) -> InquireResult<f64>
+where
+    M: AsRef<str>,
+{
+    CustomType::<f64>::new(message.as_ref()).prompt()
+}
+
+/// Async variant of [`prompt_f64`] for the `no-tty` feature.
+#[cfg(feature = "no-tty")]
+pub async fn prompt_f64<M>(
     message: M,
-    #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
+    event: crossterm::event::NoTtyEvent,
+    sender: crossterm::event::SenderWriter,
 ) -> InquireResult<f64>
 where
     M: AsRef<str>,
 {
-    CustomType::<f64>::new(message.as_ref()).prompt(
-        #[cfg(feature = "no-tty")]
-        event,
-        #[cfg(feature = "no-tty")]
-        sender,
-    )
+    CustomType::<f64>::new(message.as_ref())
+        .prompt(event, sender)
+        .await
 }
 
 /// This function is a helpful one-liner to prompt the user for a number and parse it to f32.
@@ -253,20 +283,27 @@ where
 ///
 /// This function will return an error if there is a problem interacting with the terminal, or if the user
 /// cancels the operation by pressing `Ctrl+C`.
-pub fn prompt_f32<M>(
+#[cfg(not(feature = "no-tty"))]
+pub fn prompt_f32<M>(message: M) -> InquireResult<f32>
+where
+    M: AsRef<str>,
+{
+    CustomType::<f32>::new(message.as_ref()).prompt()
+}
+
+/// Async variant of [`prompt_f32`] for the `no-tty` feature.
+#[cfg(feature = "no-tty")]
+pub async fn prompt_f32<M>(
     message: M,
-    #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
+    event: crossterm::event::NoTtyEvent,
+    sender: crossterm::event::SenderWriter,
 ) -> InquireResult<f32>
 where
     M: AsRef<str>,
 {
-    CustomType::<f32>::new(message.as_ref()).prompt(
-        #[cfg(feature = "no-tty")]
-        event,
-        #[cfg(feature = "no-tty")]
-        sender,
-    )
+    CustomType::<f32>::new(message.as_ref())
+        .prompt(event, sender)
+        .await
 }
 
 /// This function is a helpful one-liner to prompt the user for a number and parse it to u64.
@@ -297,20 +334,27 @@ where
 ///
 /// This function will return an error if there is a problem interacting with the terminal, or if the user
 /// cancels the operation by pressing `Ctrl+C`.
-pub fn prompt_u64<M>(
+#[cfg(not(feature = "no-tty"))]
+pub fn prompt_u64<M>(message: M) -> InquireResult<u64>
+where
+    M: AsRef<str>,
+{
+    CustomType::<u64>::new(message.as_ref()).prompt()
+}
+
+/// Async variant of [`prompt_u64`] for the `no-tty` feature.
+#[cfg(feature = "no-tty")]
+pub async fn prompt_u64<M>(
     message: M,
-    #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
+    event: crossterm::event::NoTtyEvent,
+    sender: crossterm::event::SenderWriter,
 ) -> InquireResult<u64>
 where
     M: AsRef<str>,
 {
-    CustomType::<u64>::new(message.as_ref()).prompt(
-        #[cfg(feature = "no-tty")]
-        event,
-        #[cfg(feature = "no-tty")]
-        sender,
-    )
+    CustomType::<u64>::new(message.as_ref())
+        .prompt(event, sender)
+        .await
 }
 
 /// This function is a helpful one-liner to prompt the user for a number and parse it to u32.
@@ -341,20 +385,27 @@ where
 ///
 /// This function will return an error if there is a problem interacting with the terminal, or if the user
 /// cancels the operation by pressing `Ctrl+C`.
-pub fn prompt_u32<M>(
+#[cfg(not(feature = "no-tty"))]
+pub fn prompt_u32<M>(message: M) -> InquireResult<u32>
+where
+    M: AsRef<str>,
+{
+    CustomType::<u32>::new(message.as_ref()).prompt()
+}
+
+/// Async variant of [`prompt_u32`] for the `no-tty` feature.
+#[cfg(feature = "no-tty")]
+pub async fn prompt_u32<M>(
     message: M,
-    #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
+    event: crossterm::event::NoTtyEvent,
+    sender: crossterm::event::SenderWriter,
 ) -> InquireResult<u32>
 where
     M: AsRef<str>,
 {
-    CustomType::<u32>::new(message.as_ref()).prompt(
-        #[cfg(feature = "no-tty")]
-        event,
-        #[cfg(feature = "no-tty")]
-        sender,
-    )
+    CustomType::<u32>::new(message.as_ref())
+        .prompt(event, sender)
+        .await
 }
 
 /// This function is a helpful one-liner to prompt the user for a number and parse it to usize.
@@ -385,20 +436,27 @@ where
 ///
 /// This function will return an error if there is a problem interacting with the terminal, or if the user
 /// cancels the operation by pressing `Ctrl+C`.
-pub fn prompt_usize<M>(
+#[cfg(not(feature = "no-tty"))]
+pub fn prompt_usize<M>(message: M) -> InquireResult<usize>
+where
+    M: AsRef<str>,
+{
+    CustomType::<usize>::new(message.as_ref()).prompt()
+}
+
+/// Async variant of [`prompt_usize`] for the `no-tty` feature.
+#[cfg(feature = "no-tty")]
+pub async fn prompt_usize<M>(
     message: M,
-    #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
+    event: crossterm::event::NoTtyEvent,
+    sender: crossterm::event::SenderWriter,
 ) -> InquireResult<usize>
 where
     M: AsRef<str>,
 {
-    CustomType::<usize>::new(message.as_ref()).prompt(
-        #[cfg(feature = "no-tty")]
-        event,
-        #[cfg(feature = "no-tty")]
-        sender,
-    )
+    CustomType::<usize>::new(message.as_ref())
+        .prompt(event, sender)
+        .await
 }
 
 /// This function is a helpful one-liner to prompt the user for a number and parse it to u128.
@@ -429,18 +487,25 @@ where
 ///
 /// This function will return an error if there is a problem interacting with the terminal, or if the user
 /// cancels the operation by pressing `Ctrl+C`.
-pub fn prompt_u128<M>(
+#[cfg(not(feature = "no-tty"))]
+pub fn prompt_u128<M>(message: M) -> InquireResult<u128>
+where
+    M: AsRef<str>,
+{
+    CustomType::<u128>::new(message.as_ref()).prompt()
+}
+
+/// Async variant of [`prompt_u128`] for the `no-tty` feature.
+#[cfg(feature = "no-tty")]
+pub async fn prompt_u128<M>(
     message: M,
-    #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-    #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
+    event: crossterm::event::NoTtyEvent,
+    sender: crossterm::event::SenderWriter,
 ) -> InquireResult<u128>
 where
     M: AsRef<str>,
 {
-    CustomType::<u128>::new(message.as_ref()).prompt(
-        #[cfg(feature = "no-tty")]
-        event,
-        #[cfg(feature = "no-tty")]
-        sender,
-    )
+    CustomType::<u128>::new(message.as_ref())
+        .prompt(event, sender)
+        .await
 }

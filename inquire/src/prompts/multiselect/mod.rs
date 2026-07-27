@@ -370,17 +370,24 @@ where
     ///
     /// Meanwhile, if the user does submit an answer, the method wraps the return
     /// type with `Some`.
-    pub fn prompt_skippable(
+    #[cfg(not(feature = "no-tty"))]
+    pub fn prompt_skippable(self) -> InquireResult<Option<Vec<T>>> {
+        match self.prompt() {
+            Ok(answer) => Ok(Some(answer)),
+            Err(InquireError::OperationCanceled) => Ok(None),
+            Err(err) => Err(err),
+        }
+    }
+
+    /// Async variant of [`prompt_skippable`](Self::prompt_skippable) for the
+    /// `no-tty` feature.
+    #[cfg(feature = "no-tty")]
+    pub async fn prompt_skippable(
         self,
-        #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-        #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
+        event: crossterm::event::NoTtyEvent,
+        sender: crossterm::event::SenderWriter,
     ) -> InquireResult<Option<Vec<T>>> {
-        match self.prompt(
-            #[cfg(feature = "no-tty")]
-            event,
-            #[cfg(feature = "no-tty")]
-            sender,
-        ) {
+        match self.prompt(event, sender).await {
             Ok(answer) => Ok(Some(answer)),
             Err(InquireError::OperationCanceled) => Ok(None),
             Err(err) => Err(err),
@@ -391,18 +398,22 @@ where
     /// the CLI user for input according to the defined rules.
     ///
     /// Returns the owned objects selected by the user.
-    pub fn prompt(
+    #[cfg(not(feature = "no-tty"))]
+    pub fn prompt(self) -> InquireResult<Vec<T>> {
+        self.raw_prompt()
+            .map(|op| op.into_iter().map(|o| o.value).collect())
+    }
+
+    /// Async variant of [`prompt`](Self::prompt) for the `no-tty` feature.
+    #[cfg(feature = "no-tty")]
+    pub async fn prompt(
         self,
-        #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-        #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
+        event: crossterm::event::NoTtyEvent,
+        sender: crossterm::event::SenderWriter,
     ) -> InquireResult<Vec<T>> {
-        self.raw_prompt(
-            #[cfg(feature = "no-tty")]
-            event,
-            #[cfg(feature = "no-tty")]
-            sender,
-        )
-        .map(|op| op.into_iter().map(|o| o.value).collect())
+        self.raw_prompt(event, sender)
+            .await
+            .map(|op| op.into_iter().map(|o| o.value).collect())
     }
 
     /// Parses the provided behavioral and rendering options and prompts
@@ -417,17 +428,24 @@ where
     ///
     /// Meanwhile, if the user does submit an answer, the method wraps the return
     /// type with `Some`.
-    pub fn raw_prompt_skippable(
+    #[cfg(not(feature = "no-tty"))]
+    pub fn raw_prompt_skippable(self) -> InquireResult<Option<Vec<ListOption<T>>>> {
+        match self.raw_prompt() {
+            Ok(answer) => Ok(Some(answer)),
+            Err(InquireError::OperationCanceled) => Ok(None),
+            Err(err) => Err(err),
+        }
+    }
+
+    /// Async variant of [`raw_prompt_skippable`](Self::raw_prompt_skippable)
+    /// for the `no-tty` feature.
+    #[cfg(feature = "no-tty")]
+    pub async fn raw_prompt_skippable(
         self,
-        #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-        #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
+        event: crossterm::event::NoTtyEvent,
+        sender: crossterm::event::SenderWriter,
     ) -> InquireResult<Option<Vec<ListOption<T>>>> {
-        match self.raw_prompt(
-            #[cfg(feature = "no-tty")]
-            event,
-            #[cfg(feature = "no-tty")]
-            sender,
-        ) {
+        match self.raw_prompt(event, sender).await {
             Ok(answer) => Ok(Some(answer)),
             Err(InquireError::OperationCanceled) => Ok(None),
             Err(err) => Err(err),
@@ -439,24 +457,39 @@ where
     ///
     /// Returns a [`ListOption`](crate::list_option::ListOption) containing
     /// the index of the selection and the owned object selected by the user.
-    pub fn raw_prompt(
-        self,
-        #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-        #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
-    ) -> InquireResult<Vec<ListOption<T>>> {
-        #[cfg(not(feature = "no-tty"))]
+    #[cfg(not(feature = "no-tty"))]
+    pub fn raw_prompt(self) -> InquireResult<Vec<ListOption<T>>> {
         let (input_reader, terminal) = get_default_terminal()?;
-        #[cfg(feature = "no-tty")]
-        let (input_reader, terminal) = get_default_terminal(event, sender)?;
-
         let mut backend = Backend::new(input_reader, terminal, self.render_config)?;
         self.prompt_with_backend(&mut backend)
     }
 
+    /// Async variant of [`raw_prompt`](Self::raw_prompt) for the `no-tty`
+    /// feature.
+    #[cfg(feature = "no-tty")]
+    pub async fn raw_prompt(
+        self,
+        event: crossterm::event::NoTtyEvent,
+        sender: crossterm::event::SenderWriter,
+    ) -> InquireResult<Vec<ListOption<T>>> {
+        let (input_reader, terminal) = get_default_terminal(event, sender)?;
+        let mut backend = Backend::new(input_reader, terminal, self.render_config)?;
+        self.prompt_with_backend(&mut backend).await
+    }
+
+    #[cfg(not(feature = "no-tty"))]
     pub(crate) fn prompt_with_backend<B: MultiSelectBackend>(
         self,
         backend: &mut B,
     ) -> InquireResult<Vec<ListOption<T>>> {
         MultiSelectPrompt::new(self)?.prompt(backend)
+    }
+
+    #[cfg(feature = "no-tty")]
+    pub(crate) async fn prompt_with_backend<B: MultiSelectBackend>(
+        self,
+        backend: &mut B,
+    ) -> InquireResult<Vec<ListOption<T>>> {
+        MultiSelectPrompt::new(self)?.prompt(backend).await
     }
 }

@@ -210,17 +210,24 @@ impl<'a> Confirm<'a> {
     ///
     /// Meanwhile, if the user does submit an answer, the method wraps the return
     /// type with `Some`.
-    pub fn prompt_skippable(
+    #[cfg(not(feature = "no-tty"))]
+    pub fn prompt_skippable(self) -> InquireResult<Option<bool>> {
+        match self.prompt() {
+            Ok(answer) => Ok(Some(answer)),
+            Err(InquireError::OperationCanceled) => Ok(None),
+            Err(err) => Err(err),
+        }
+    }
+
+    /// Async variant of [`prompt_skippable`](Self::prompt_skippable) for the
+    /// `no-tty` feature.
+    #[cfg(feature = "no-tty")]
+    pub async fn prompt_skippable(
         self,
-        #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-        #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
+        event: crossterm::event::NoTtyEvent,
+        sender: crossterm::event::SenderWriter,
     ) -> InquireResult<Option<bool>> {
-        match self.prompt(
-            #[cfg(feature = "no-tty")]
-            event,
-            #[cfg(feature = "no-tty")]
-            sender,
-        ) {
+        match self.prompt(event, sender).await {
             Ok(answer) => Ok(Some(answer)),
             Err(InquireError::OperationCanceled) => Ok(None),
             Err(err) => Err(err),
@@ -229,25 +236,39 @@ impl<'a> Confirm<'a> {
 
     /// Parses the provided behavioral and rendering options and prompts
     /// the CLI user for input according to the defined rules.
-    pub fn prompt(
-        self,
-        #[cfg(feature = "no-tty")] event: crossterm::event::NoTtyEvent,
-        #[cfg(feature = "no-tty")] sender: crossterm::event::SenderWriter,
-    ) -> InquireResult<bool> {
-        #[cfg(not(feature = "no-tty"))]
+    #[cfg(not(feature = "no-tty"))]
+    pub fn prompt(self) -> InquireResult<bool> {
         let (input_reader, terminal) = get_default_terminal()?;
-        #[cfg(feature = "no-tty")]
-        let (input_reader, terminal) = get_default_terminal(event, sender)?;
-
         let mut backend = Backend::new(input_reader, terminal, self.render_config)?;
         self.prompt_with_backend(&mut backend)
     }
 
+    /// Async variant of [`prompt`](Self::prompt) for the `no-tty` feature.
+    #[cfg(feature = "no-tty")]
+    pub async fn prompt(
+        self,
+        event: crossterm::event::NoTtyEvent,
+        sender: crossterm::event::SenderWriter,
+    ) -> InquireResult<bool> {
+        let (input_reader, terminal) = get_default_terminal(event, sender)?;
+        let mut backend = Backend::new(input_reader, terminal, self.render_config)?;
+        self.prompt_with_backend(&mut backend).await
+    }
+
+    #[cfg(not(feature = "no-tty"))]
     pub(crate) fn prompt_with_backend<B: CustomTypeBackend>(
         self,
         backend: &mut B,
     ) -> InquireResult<bool> {
         CustomType::from(self).prompt_with_backend(backend)
+    }
+
+    #[cfg(feature = "no-tty")]
+    pub(crate) async fn prompt_with_backend<B: CustomTypeBackend>(
+        self,
+        backend: &mut B,
+    ) -> InquireResult<bool> {
+        CustomType::from(self).prompt_with_backend(backend).await
     }
 }
 

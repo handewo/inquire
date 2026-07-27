@@ -115,6 +115,7 @@ where
     ///
     /// This should not be reimplemented by types that implement this trait,
     /// unless the situation really warrants it.
+    #[cfg(not(feature = "no-tty"))]
     fn prompt(mut self, backend: &mut Backend) -> InquireResult<Self::Output> {
         self.setup()?;
 
@@ -161,6 +162,68 @@ where
         backend.frame_setup()?;
         backend.render_prompt_with_answer(self.message(), &formatted)?;
         backend.frame_finish(true)?;
+
+        Ok(final_answer)
+    }
+
+    /// Top-level implementation of a prompt's flow, for the async `no-tty`
+    /// backend.
+    ///
+    /// Mirrors the synchronous version, but awaits the async I/O boundaries
+    /// (`frame_finish`, `read_key`) and runs an explicit `backend.finish()`
+    /// teardown on every exit path, since the async flush cannot run in `Drop`.
+    #[cfg(feature = "no-tty")]
+    async fn prompt(mut self, backend: &mut Backend) -> InquireResult<Self::Output> {
+        self.setup()?;
+
+        let mut last_handle = ActionResult::NeedsRedraw;
+        let final_answer = loop {
+            if last_handle.needs_redraw() {
+                backend.frame_setup()?;
+                self.render(backend)?;
+                backend.frame_finish(false).await?;
+                last_handle = ActionResult::Clean;
+            }
+
+            let key = backend.read_key().await?;
+            let action = Action::from_key(key, self.config());
+
+            if let Some(action) = action {
+                last_handle = match action {
+                    Action::Submit => {
+                        if let Some(answer) = self.submit()? {
+                            break answer;
+                        }
+                        ActionResult::NeedsRedraw
+                    }
+                    Action::Cancel => {
+                        let pre_cancel_result = self.pre_cancel()?;
+
+                        if pre_cancel_result {
+                            backend.frame_setup()?;
+                            backend.render_canceled_prompt(self.message())?;
+                            backend.frame_finish(true).await?;
+                            backend.finish().await?;
+                            return Err(InquireError::OperationCanceled);
+                        }
+
+                        ActionResult::NeedsRedraw
+                    }
+                    Action::Interrupt => {
+                        backend.finish().await?;
+                        return Err(InquireError::OperationInterrupted);
+                    }
+                    Action::Inner(inner_action) => self.handle(inner_action)?,
+                };
+            }
+        };
+
+        let formatted = self.format_answer(&final_answer);
+
+        backend.frame_setup()?;
+        backend.render_prompt_with_answer(self.message(), &formatted)?;
+        backend.frame_finish(true).await?;
+        backend.finish().await?;
 
         Ok(final_answer)
     }

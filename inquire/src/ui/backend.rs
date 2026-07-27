@@ -16,7 +16,18 @@ use super::{frame_renderer::FrameRenderer, InputReader};
 
 pub trait CommonBackend: InputReader {
     fn frame_setup(&mut self) -> Result<()>;
+
+    #[cfg(not(feature = "no-tty"))]
     fn frame_finish(&mut self, is_last_frame: bool) -> Result<()>;
+
+    #[cfg(feature = "no-tty")]
+    async fn frame_finish(&mut self, is_last_frame: bool) -> Result<()>;
+
+    /// Explicit end-of-prompt teardown. A no-op for the tty backends (handled by
+    /// `Drop`); under `no-tty` it flushes the final cursor state to the async
+    /// output channel.
+    #[cfg(feature = "no-tty")]
+    async fn finish(&mut self) -> Result<()>;
 
     fn render_canceled_prompt(&mut self, prompt: &str) -> Result<()>;
     fn render_prompt_with_answer(&mut self, prompt: &str, answer: &str) -> Result<()>;
@@ -254,8 +265,21 @@ where
         self.frame_renderer.start_frame()
     }
 
+    #[cfg(not(feature = "no-tty"))]
     fn frame_finish(&mut self, is_last_frame: bool) -> Result<()> {
         self.frame_renderer.finish_current_frame(is_last_frame)
+    }
+
+    #[cfg(feature = "no-tty")]
+    async fn frame_finish(&mut self, is_last_frame: bool) -> Result<()> {
+        self.frame_renderer
+            .finish_current_frame(is_last_frame)
+            .await
+    }
+
+    #[cfg(feature = "no-tty")]
+    async fn finish(&mut self) -> Result<()> {
+        self.frame_renderer.teardown().await
     }
 
     fn render_canceled_prompt(&mut self, prompt: &str) -> Result<()> {
@@ -663,12 +687,18 @@ where
     I: InputReader,
     T: Terminal,
 {
+    #[cfg(not(feature = "no-tty"))]
     fn read_key(&mut self) -> InquireResult<Key> {
         self.input_reader.read_key()
     }
+
+    #[cfg(feature = "no-tty")]
+    async fn read_key(&mut self) -> InquireResult<Key> {
+        self.input_reader.read_key().await
+    }
 }
 
-#[cfg(test)]
+#[cfg(all(test, not(feature = "no-tty")))]
 pub(crate) mod test {
     use std::collections::VecDeque;
 

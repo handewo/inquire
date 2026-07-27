@@ -1,9 +1,8 @@
-use std::io::{Result, Write};
+use std::io::{Error, Result};
 
 use crossterm::{
     cursor,
     event::{self, KeyCode, KeyEvent, KeyModifiers, NoTtyEvent, SenderWriter},
-    queue,
     style::{Attribute, Color, Print, SetAttribute, SetBackgroundColor, SetForegroundColor},
     terminal::{self, ClearType},
     Command,
@@ -19,6 +18,12 @@ use super::Terminal;
 pub struct CrosstermTerminal {
     sender: SenderWriter,
     event: NoTtyEvent,
+    /// Buffer holding serialized ANSI commands until the next `flush`.
+    ///
+    /// The latest `crossterm` `no-tty` API exposes only an async writer
+    /// ([`SenderWriter::write_all`]), so writes are serialized synchronously
+    /// into this buffer and drained on the (async) `flush`.
+    buffer: String,
 }
 
 pub struct CrosstermKeyReader {
@@ -32,9 +37,9 @@ impl CrosstermKeyReader {
 }
 
 impl InputReader for CrosstermKeyReader {
-    fn read_key(&mut self) -> InquireResult<Key> {
+    async fn read_key(&mut self) -> InquireResult<Key> {
         loop {
-            if let event::Event::Key(key_event) = event::read(&self.event)? {
+            if let event::Event::Key(key_event) = event::read(&self.event).await? {
                 return Ok(key_event.into());
             }
         }
@@ -45,15 +50,15 @@ impl CrosstermTerminal {
     pub fn new(sender: SenderWriter, event: NoTtyEvent) -> InquireResult<Self> {
         terminal::enable_raw_mode()?;
 
-        Ok(Self { sender, event })
-    }
-
-    fn get_writer(&mut self) -> &mut dyn Write {
-        &mut self.sender
+        Ok(Self {
+            sender,
+            event,
+            buffer: String::new(),
+        })
     }
 
     fn write_command<C: Command>(&mut self, command: C) -> Result<()> {
-        queue!(&mut self.get_writer(), command)
+        command.write_ansi(&mut self.buffer).map_err(Error::other)
     }
 
     fn set_attributes(&mut self, attributes: Attributes) -> Result<()> {
@@ -121,8 +126,15 @@ impl Terminal for CrosstermTerminal {
         self.write_command(cursor::MoveToColumn(idx))
     }
 
-    fn flush(&mut self) -> Result<()> {
-        self.get_writer().flush()
+    async fn flush(&mut self) -> Result<()> {
+        if self.buffer.is_empty() {
+            return Ok(());
+        }
+
+        self.sender.write_all(self.buffer.as_bytes()).await?;
+        self.buffer.clear();
+
+        Ok(())
     }
 
     fn get_size(&self) -> Result<Option<super::TerminalSize>> {
@@ -178,7 +190,10 @@ impl Terminal for CrosstermTerminal {
 
 impl Drop for CrosstermTerminal {
     fn drop(&mut self) {
-        let _unused = self.flush();
+        // The buffer is drained by the explicit async teardown
+        // (`FrameRenderer::teardown`) before the terminal is dropped, since we
+        // cannot `.await` the async `flush` here. `disable_raw_mode` is a no-op
+        // in the `no-tty` backend but kept for symmetry with the tty backend.
         let _unused = terminal::disable_raw_mode();
     }
 }
