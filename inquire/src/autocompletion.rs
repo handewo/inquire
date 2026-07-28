@@ -29,7 +29,7 @@ pub type Replacement = Option<String>;
 /// For example, in the `complex_autocompletion.rs` example file, the `FilePathCompleter` scans the file system based on the current text input, storing a list of paths that match the current text input.
 ///
 /// Every time `get_suggestions` is called, the method returns the list of paths that match the user input. When the user presses the autocompletion hotkey, the `FilePathCompleter` checks whether there is any path selected from the list, if there is, it decides to replace the current text input for it. The interesting piece of functionality is that if there isn't a path selected from the list, the `FilePathCompleter` calculates the longest common prefix amongst all scanned paths and updates the text input to an unambiguous new value. Similar to how terminals work when traversing paths.
-pub trait Autocomplete: DynClone {
+pub trait Autocomplete: DynClone + crate::validator::MaybeSendSync {
     /// List of input suggestions to be displayed to the user upon typing the
     /// text input.
     ///
@@ -84,7 +84,7 @@ impl Autocomplete for NoAutoCompletion {
 
 impl<F> Autocomplete for F
 where
-    F: Fn(&str) -> Result<Vec<String>, CustomUserError> + Clone,
+    F: Fn(&str) -> Result<Vec<String>, CustomUserError> + Clone + crate::validator::MaybeSendSync,
 {
     fn get_suggestions(&mut self, input: &str) -> Result<Vec<String>, CustomUserError> {
         (self)(input)

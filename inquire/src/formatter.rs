@@ -63,7 +63,11 @@ use crate::list_option::ListOption;
 /// assert_eq!(String::from("times square"), formatter("Times Square"));
 /// assert_eq!(String::from("times square"), formatter("times square"));
 /// ```
+#[cfg(not(feature = "no-tty"))]
 pub type StringFormatter<'a> = &'a dyn Fn(&str) -> String;
+#[cfg(feature = "no-tty")]
+/// `Send + Sync` variant of [`StringFormatter`] used under the `no-tty` feature.
+pub type StringFormatter<'a> = &'a (dyn Fn(&str) -> String + Send + Sync);
 
 /// Type alias for formatters used in [Confirm](crate::Confirm) prompts.
 ///
@@ -82,7 +86,11 @@ pub type StringFormatter<'a> = &'a dyn Fn(&str) -> String;
 /// assert_eq!(String::from("si"), formatter(true));
 /// assert_eq!(String::from("no"), formatter(false));
 /// ```
+#[cfg(not(feature = "no-tty"))]
 pub type BoolFormatter<'a> = &'a dyn Fn(bool) -> String;
+#[cfg(feature = "no-tty")]
+/// `Send + Sync` variant of [`BoolFormatter`] used under the `no-tty` feature.
+pub type BoolFormatter<'a> = &'a (dyn Fn(bool) -> String + Send + Sync);
 
 /// Type alias for formatters used in [Select](crate::Select) prompts.
 ///
@@ -99,7 +107,11 @@ pub type BoolFormatter<'a> = &'a dyn Fn(bool) -> String;
 /// assert_eq!(String::from("Option 1: 'a'"), formatter(ListOption::new(0, "a")));
 /// assert_eq!(String::from("Option 2: 'b'"), formatter(ListOption::new(1, "b")));
 /// ```
+#[cfg(not(feature = "no-tty"))]
 pub type OptionFormatter<'a, T> = &'a dyn Fn(ListOption<&T>) -> String;
+#[cfg(feature = "no-tty")]
+/// `Send + Sync` variant of [`OptionFormatter`] used under the `no-tty` feature.
+pub type OptionFormatter<'a, T> = &'a (dyn Fn(ListOption<&T>) -> String + Send + Sync);
 
 /// Type alias for formatters used in [`MultiSelect`](crate::MultiSelect) prompts.
 ///
@@ -127,7 +139,11 @@ pub type OptionFormatter<'a, T> = &'a dyn Fn(ListOption<&T>) -> String;
 /// ans.push(ListOption::new(3, "d"));
 /// assert_eq!(String::from("You selected 2 options"), formatter(&ans));
 /// ```
+#[cfg(not(feature = "no-tty"))]
 pub type MultiOptionFormatter<'a, T> = &'a dyn Fn(&[ListOption<&T>]) -> String;
+#[cfg(feature = "no-tty")]
+/// `Send + Sync` variant of [`MultiOptionFormatter`] used under the `no-tty` feature.
+pub type MultiOptionFormatter<'a, T> = &'a (dyn Fn(&[ListOption<&T>]) -> String + Send + Sync);
 
 /// Type alias for formatters used in [`CustomType`](crate::CustomType) prompts.
 ///
@@ -146,7 +162,11 @@ pub type MultiOptionFormatter<'a, T> = &'a dyn Fn(&[ListOption<&T>]) -> String;
 /// assert_eq!(String::from("$44.91"), formatter(44.9123));
 /// assert_eq!(String::from("$45.00"), formatter(44.998));
 /// ```
+#[cfg(not(feature = "no-tty"))]
 pub type CustomTypeFormatter<'a, T> = &'a dyn Fn(T) -> String;
+#[cfg(feature = "no-tty")]
+/// `Send + Sync` variant of [`CustomTypeFormatter`] used under the `no-tty` feature.
+pub type CustomTypeFormatter<'a, T> = &'a (dyn Fn(T) -> String + Send + Sync);
 
 /// Type alias for formatters used in [`DateSelect`](crate::DateSelect) prompts.
 ///
@@ -167,7 +187,11 @@ pub type CustomTypeFormatter<'a, T> = &'a dyn Fn(T) -> String;
 /// );
 /// ```
 #[cfg(feature = "date")]
+#[cfg(not(feature = "no-tty"))]
 pub type DateFormatter<'a> = &'a dyn Fn(chrono::NaiveDate) -> String;
+#[cfg(feature = "no-tty")]
+/// `Send + Sync` variant of [`DateFormatter`] used under the `no-tty` feature.
+pub type DateFormatter<'a> = &'a (dyn Fn(chrono::NaiveDate) -> String + Send + Sync);
 
 /// String formatter used by default in inputs that return a `String` as input.
 /// Its behavior is to just echo the received input.

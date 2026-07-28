@@ -16,6 +16,22 @@ use dyn_clone::DynClone;
 
 use crate::{error::CustomUserError, list_option::ListOption};
 
+/// Marker supertrait for validators.
+///
+/// Under the `no-tty` feature this requires `Send + Sync`, so that boxed
+/// validators (and the prompt futures that capture them) are `Send` and can be
+/// driven from spawned tasks. Without the feature it imposes no extra bound.
+#[cfg(not(feature = "no-tty"))]
+pub trait MaybeSendSync {}
+#[cfg(not(feature = "no-tty"))]
+impl<T: ?Sized> MaybeSendSync for T {}
+
+/// Marker supertrait for validators. Requires `Send + Sync` under `no-tty`.
+#[cfg(feature = "no-tty")]
+pub trait MaybeSendSync: Send + Sync {}
+#[cfg(feature = "no-tty")]
+impl<T: ?Sized + Send + Sync> MaybeSendSync for T {}
+
 /// Error message that is displayed to the users when their input is considered not
 /// valid by registered validators.
 #[derive(Clone, Default, Debug, PartialEq, Eq)]
@@ -81,7 +97,7 @@ pub enum Validation {
 /// );
 /// # Ok::<(), inquire::error::CustomUserError>(())
 /// ```
-pub trait StringValidator: DynClone {
+pub trait StringValidator: DynClone + MaybeSendSync {
     /// Confirm the given input string is a valid value.
     fn validate(&self, input: &str) -> Result<Validation, CustomUserError>;
 }
@@ -94,7 +110,7 @@ impl Clone for Box<dyn StringValidator> {
 
 impl<F> StringValidator for F
 where
-    F: Fn(&str) -> Result<Validation, CustomUserError> + Clone,
+    F: Fn(&str) -> Result<Validation, CustomUserError> + Clone + MaybeSendSync,
 {
     fn validate(&self, input: &str) -> Result<Validation, CustomUserError> {
         (self)(input)
@@ -131,7 +147,7 @@ where
 /// # Ok::<(), inquire::error::CustomUserError>(())
 /// ```
 #[cfg(feature = "date")]
-pub trait DateValidator: DynClone {
+pub trait DateValidator: DynClone + MaybeSendSync {
     /// Confirm the given input date is a valid value.
     fn validate(&self, input: chrono::NaiveDate) -> Result<Validation, CustomUserError>;
 }
@@ -146,7 +162,7 @@ impl Clone for Box<dyn DateValidator> {
 #[cfg(feature = "date")]
 impl<F> DateValidator for F
 where
-    F: Fn(chrono::NaiveDate) -> Result<Validation, CustomUserError> + Clone,
+    F: Fn(chrono::NaiveDate) -> Result<Validation, CustomUserError> + Clone + MaybeSendSync,
 {
     fn validate(&self, input: chrono::NaiveDate) -> Result<Validation, CustomUserError> {
         (self)(input)
@@ -186,7 +202,7 @@ where
 /// );
 /// # Ok::<(), inquire::error::CustomUserError>(())
 /// ```
-pub trait MultiOptionValidator<T: ?Sized>: DynClone {
+pub trait MultiOptionValidator<T: ?Sized>: DynClone + MaybeSendSync {
     /// Confirm the given input list is a valid value.
     fn validate(&self, input: &[ListOption<&T>]) -> Result<Validation, CustomUserError>;
 }
@@ -199,7 +215,7 @@ impl<T> Clone for Box<dyn MultiOptionValidator<T>> {
 
 impl<F, T> MultiOptionValidator<T> for F
 where
-    F: Fn(&[ListOption<&T>]) -> Result<Validation, CustomUserError> + Clone,
+    F: Fn(&[ListOption<&T>]) -> Result<Validation, CustomUserError> + Clone + MaybeSendSync,
     T: ?Sized,
 {
     fn validate(&self, input: &[ListOption<&T>]) -> Result<Validation, CustomUserError> {
@@ -240,7 +256,7 @@ where
 /// );
 /// # Ok::<(), inquire::error::CustomUserError>(())
 /// ```
-pub trait CustomTypeValidator<T: ?Sized>: DynClone {
+pub trait CustomTypeValidator<T: ?Sized>: DynClone + MaybeSendSync {
     /// Confirm the given input list is a valid value.
     fn validate(&self, input: &T) -> Result<Validation, CustomUserError>;
 }
@@ -253,7 +269,7 @@ impl<T> Clone for Box<dyn CustomTypeValidator<T>> {
 
 impl<F, T> CustomTypeValidator<T> for F
 where
-    F: Fn(&T) -> Result<Validation, CustomUserError> + Clone,
+    F: Fn(&T) -> Result<Validation, CustomUserError> + Clone + MaybeSendSync,
     T: ?Sized,
 {
     fn validate(&self, input: &T) -> Result<Validation, CustomUserError> {

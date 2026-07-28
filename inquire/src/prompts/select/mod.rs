@@ -331,7 +331,10 @@ where
         self,
         event: crossterm::event::NoTtyEvent,
         sender: crossterm::event::SenderWriter,
-    ) -> InquireResult<T> {
+    ) -> InquireResult<T>
+    where
+        T: Send,
+    {
         self.raw_prompt(event, sender).await.map(|op| op.value)
     }
 
@@ -360,7 +363,10 @@ where
         self,
         event: crossterm::event::NoTtyEvent,
         sender: crossterm::event::SenderWriter,
-    ) -> InquireResult<Option<T>> {
+    ) -> InquireResult<Option<T>>
+    where
+        T: Send,
+    {
         match self.prompt(event, sender).await {
             Ok(answer) => Ok(Some(answer)),
             Err(InquireError::OperationCanceled) => Ok(None),
@@ -396,7 +402,10 @@ where
         self,
         event: crossterm::event::NoTtyEvent,
         sender: crossterm::event::SenderWriter,
-    ) -> InquireResult<Option<ListOption<T>>> {
+    ) -> InquireResult<Option<ListOption<T>>>
+    where
+        T: Send,
+    {
         match self.raw_prompt(event, sender).await {
             Ok(answer) => Ok(Some(answer)),
             Err(InquireError::OperationCanceled) => Ok(None),
@@ -423,7 +432,10 @@ where
         self,
         event: crossterm::event::NoTtyEvent,
         sender: crossterm::event::SenderWriter,
-    ) -> InquireResult<ListOption<T>> {
+    ) -> InquireResult<ListOption<T>>
+    where
+        T: Send,
+    {
         let (input_reader, terminal) = get_default_terminal(event, sender)?;
         let mut backend = Backend::new(input_reader, terminal, self.render_config)?;
         self.prompt_with_backend(&mut backend).await
@@ -438,10 +450,13 @@ where
     }
 
     #[cfg(feature = "no-tty")]
-    pub(crate) async fn prompt_with_backend<B: SelectBackend>(
+    pub(crate) async fn prompt_with_backend<B: SelectBackend + Send>(
         self,
         backend: &mut B,
-    ) -> InquireResult<ListOption<T>> {
+    ) -> InquireResult<ListOption<T>>
+    where
+        T: Send,
+    {
         SelectPrompt::new(self)?.prompt(backend).await
     }
 }

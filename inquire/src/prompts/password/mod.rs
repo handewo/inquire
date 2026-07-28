@@ -312,7 +312,7 @@ impl<'a> Password<'a> {
     }
 
     #[cfg(feature = "no-tty")]
-    pub(crate) async fn prompt_with_backend<B: PasswordBackend>(
+    pub(crate) async fn prompt_with_backend<B: PasswordBackend + Send>(
         self,
         backend: &mut B,
     ) -> InquireResult<String> {

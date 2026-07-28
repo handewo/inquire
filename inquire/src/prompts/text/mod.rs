@@ -323,7 +323,7 @@ impl<'a, 'b> Text<'a, 'b> {
     }
 
     #[cfg(feature = "no-tty")]
-    pub(crate) async fn prompt_with_backend<B: TextBackend>(
+    pub(crate) async fn prompt_with_backend<B: TextBackend + Send>(
         self,
         backend: &mut B,
     ) -> InquireResult<String> {

@@ -279,7 +279,10 @@ where
         self,
         event: crossterm::event::NoTtyEvent,
         sender: crossterm::event::SenderWriter,
-    ) -> InquireResult<Option<T>> {
+    ) -> InquireResult<Option<T>>
+    where
+        T: Send,
+    {
         match self.prompt(event, sender).await {
             Ok(answer) => Ok(Some(answer)),
             Err(InquireError::OperationCanceled) => Ok(None),
@@ -302,7 +305,10 @@ where
         self,
         event: crossterm::event::NoTtyEvent,
         sender: crossterm::event::SenderWriter,
-    ) -> InquireResult<T> {
+    ) -> InquireResult<T>
+    where
+        T: Send,
+    {
         let (input_reader, terminal) = get_default_terminal(event, sender)?;
         let mut backend = Backend::new(input_reader, terminal, self.render_config)?;
         self.prompt_with_backend(&mut backend).await
@@ -317,10 +323,13 @@ where
     }
 
     #[cfg(feature = "no-tty")]
-    pub(crate) async fn prompt_with_backend<B: CustomTypeBackend>(
+    pub(crate) async fn prompt_with_backend<B: CustomTypeBackend + Send>(
         self,
         backend: &mut B,
-    ) -> InquireResult<T> {
+    ) -> InquireResult<T>
+    where
+        T: Send,
+    {
         CustomTypePrompt::from(self).prompt(backend).await
     }
 }

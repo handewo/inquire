@@ -296,7 +296,7 @@ impl<'a> DateSelect<'a> {
     }
 
     #[cfg(feature = "no-tty")]
-    pub(crate) async fn prompt_with_backend<B: DateSelectBackend>(
+    pub(crate) async fn prompt_with_backend<B: DateSelectBackend + Send>(
         self,
         backend: &mut B,
     ) -> InquireResult<NaiveDate> {

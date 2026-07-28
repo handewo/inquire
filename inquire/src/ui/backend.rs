@@ -21,13 +21,16 @@ pub trait CommonBackend: InputReader {
     fn frame_finish(&mut self, is_last_frame: bool) -> Result<()>;
 
     #[cfg(feature = "no-tty")]
-    async fn frame_finish(&mut self, is_last_frame: bool) -> Result<()>;
+    fn frame_finish(
+        &mut self,
+        is_last_frame: bool,
+    ) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Explicit end-of-prompt teardown. A no-op for the tty backends (handled by
     /// `Drop`); under `no-tty` it flushes the final cursor state to the async
     /// output channel.
     #[cfg(feature = "no-tty")]
-    async fn finish(&mut self) -> Result<()>;
+    fn finish(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
 
     fn render_canceled_prompt(&mut self, prompt: &str) -> Result<()>;
     fn render_prompt_with_answer(&mut self, prompt: &str, answer: &str) -> Result<()>;
@@ -88,8 +91,8 @@ pub struct Position {
 
 pub struct Backend<'a, I, T>
 where
-    I: InputReader,
-    T: Terminal,
+    I: InputReader + crate::validator::MaybeSendSync,
+    T: Terminal + crate::validator::MaybeSendSync,
 {
     frame_renderer: FrameRenderer<T>,
     input_reader: I,
@@ -98,8 +101,8 @@ where
 
 impl<'a, I, T> Backend<'a, I, T>
 where
-    I: InputReader,
-    T: Terminal,
+    I: InputReader + crate::validator::MaybeSendSync,
+    T: Terminal + crate::validator::MaybeSendSync,
 {
     #[allow(clippy::large_types_passed_by_value)]
     pub fn new(input_reader: I, terminal: T, render_config: RenderConfig<'a>) -> Result<Self> {
@@ -258,8 +261,8 @@ where
 
 impl<'a, I, T> CommonBackend for Backend<'a, I, T>
 where
-    I: InputReader,
-    T: Terminal,
+    I: InputReader + crate::validator::MaybeSendSync,
+    T: Terminal + crate::validator::MaybeSendSync,
 {
     fn frame_setup(&mut self) -> Result<()> {
         self.frame_renderer.start_frame()
@@ -352,8 +355,8 @@ where
 
 impl<'a, I, T> TextBackend for Backend<'a, I, T>
 where
-    I: InputReader,
-    T: Terminal,
+    I: InputReader + crate::validator::MaybeSendSync,
+    T: Terminal + crate::validator::MaybeSendSync,
 {
     fn render_prompt(
         &mut self,
@@ -381,8 +384,8 @@ where
 #[cfg(feature = "editor")]
 impl<'a, I, T> EditorBackend for Backend<'a, I, T>
 where
-    I: InputReader,
-    T: Terminal,
+    I: InputReader + crate::validator::MaybeSendSync,
+    T: Terminal + crate::validator::MaybeSendSync,
 {
     fn render_prompt(&mut self, prompt: &str, editor_command: &str) -> Result<()> {
         self.print_prompt(prompt)?;
@@ -399,8 +402,8 @@ where
 
 impl<'a, I, T> SelectBackend for Backend<'a, I, T>
 where
-    I: InputReader,
-    T: Terminal,
+    I: InputReader + crate::validator::MaybeSendSync,
+    T: Terminal + crate::validator::MaybeSendSync,
 {
     fn render_select_prompt(&mut self, prompt: &str, cur_input: Option<&Input>) -> Result<()> {
         if let Some(input) = cur_input {
@@ -433,8 +436,8 @@ where
 
 impl<'a, I, T> MultiSelectBackend for Backend<'a, I, T>
 where
-    I: InputReader,
-    T: Terminal,
+    I: InputReader + crate::validator::MaybeSendSync,
+    T: Terminal + crate::validator::MaybeSendSync,
 {
     fn render_multiselect_prompt(&mut self, prompt: &str, cur_input: Option<&Input>) -> Result<()> {
         if let Some(input) = cur_input {
@@ -515,8 +518,8 @@ pub mod date {
 
     impl<'a, I, T> DateSelectBackend for Backend<'a, I, T>
     where
-        I: InputReader,
-        T: Terminal,
+        I: InputReader + crate::validator::MaybeSendSync,
+        T: Terminal + crate::validator::MaybeSendSync,
     {
         fn render_calendar_prompt(&mut self, prompt: &str) -> Result<()> {
             self.print_prompt(prompt)?;
@@ -643,8 +646,8 @@ pub mod date {
 
 impl<'a, I, T> CustomTypeBackend for Backend<'a, I, T>
 where
-    I: InputReader,
-    T: Terminal,
+    I: InputReader + crate::validator::MaybeSendSync,
+    T: Terminal + crate::validator::MaybeSendSync,
 {
     fn render_prompt(
         &mut self,
@@ -658,8 +661,8 @@ where
 
 impl<'a, I, T> PasswordBackend for Backend<'a, I, T>
 where
-    I: InputReader,
-    T: Terminal,
+    I: InputReader + crate::validator::MaybeSendSync,
+    T: Terminal + crate::validator::MaybeSendSync,
 {
     fn render_prompt(&mut self, prompt: &str) -> Result<()> {
         self.print_prompt(prompt)?;
@@ -684,8 +687,8 @@ where
 
 impl<'a, I, T> InputReader for Backend<'a, I, T>
 where
-    I: InputReader,
-    T: Terminal,
+    I: InputReader + crate::validator::MaybeSendSync,
+    T: Terminal + crate::validator::MaybeSendSync,
 {
     #[cfg(not(feature = "no-tty"))]
     fn read_key(&mut self) -> InquireResult<Key> {

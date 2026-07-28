@@ -71,21 +71,38 @@ use crate::error::CustomUserError;
 /// assert_eq!(None,     DEFAULT_SCORER("sa", &"Jacksonville",  "Jacksonville",  11));
 /// assert_eq!(Some(49), DEFAULT_SCORER("sa", &"San Jose",      "San Jose",      12));
 /// ```
+#[cfg(not(feature = "no-tty"))]
 pub type Scorer<'a, T> = &'a dyn Fn(&str, &T, &str, usize) -> Option<i64>;
+#[cfg(feature = "no-tty")]
+/// `Send + Sync` variant of [`Scorer`] used under the `no-tty` feature.
+pub type Scorer<'a, T> = &'a (dyn Fn(&str, &T, &str, usize) -> Option<i64> + Send + Sync);
 
 /// Type alias to represent the function used to sort a slice of (index, score) tuples.
 ///
 /// The function receives a mutable slice of tuples, where each tuple contains:
 /// - The index of the option in the original list
 /// - The score assigned to that option
+#[cfg(not(feature = "no-tty"))]
 pub type Sorter<'a> = &'a dyn Fn(&mut [(usize, i64)]);
+#[cfg(feature = "no-tty")]
+/// `Send + Sync` variant of [`Sorter`] used under the `no-tty` feature.
+pub type Sorter<'a> = &'a (dyn Fn(&mut [(usize, i64)]) + Send + Sync);
 
 /// Type alias to represent the function used to retrieve text input suggestions.
 /// The function receives the current input and should return a collection of strings
 /// containing the suggestions to be made to the user.
+#[cfg(not(feature = "no-tty"))]
 pub type Suggester<'a> = &'a dyn Fn(&str) -> Result<Vec<String>, CustomUserError>;
+#[cfg(feature = "no-tty")]
+/// `Send + Sync` variant of [`Suggester`] used under the `no-tty` feature.
+pub type Suggester<'a> = &'a (dyn Fn(&str) -> Result<Vec<String>, CustomUserError> + Send + Sync);
 
 /// Type alias to represent the function used to retrieve an optional autocompletion suggestion.
 /// The function receives the current input and should return the suggestion (if any)
 /// that will replace the current input.
+#[cfg(not(feature = "no-tty"))]
 pub type Completer<'a> = &'a dyn Fn(&str) -> Result<Option<String>, CustomUserError>;
+#[cfg(feature = "no-tty")]
+/// `Send + Sync` variant of [`Completer`] used under the `no-tty` feature.
+pub type Completer<'a> =
+    &'a (dyn Fn(&str) -> Result<Option<String>, CustomUserError> + Send + Sync);

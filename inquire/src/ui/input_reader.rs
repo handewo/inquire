@@ -11,6 +11,9 @@ pub trait InputReader: Sized {
     fn read_key(&mut self) -> InquireResult<Key>;
 
     /// Reads the next key event from the async input channel.
+    ///
+    /// The returned future is `Send` so prompts can be driven from within
+    /// spawned tasks (e.g. an SSH session handler).
     #[cfg(feature = "no-tty")]
-    async fn read_key(&mut self) -> InquireResult<Key>;
+    fn read_key(&mut self) -> impl std::future::Future<Output = InquireResult<Key>> + Send;
 }

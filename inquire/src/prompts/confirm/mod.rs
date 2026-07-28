@@ -264,7 +264,7 @@ impl<'a> Confirm<'a> {
     }
 
     #[cfg(feature = "no-tty")]
-    pub(crate) async fn prompt_with_backend<B: CustomTypeBackend>(
+    pub(crate) async fn prompt_with_backend<B: CustomTypeBackend + Send>(
         self,
         backend: &mut B,
     ) -> InquireResult<bool> {

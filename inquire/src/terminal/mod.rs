@@ -82,8 +82,11 @@ pub trait Terminal: Sized {
     fn flush(&mut self) -> Result<()>;
 
     /// Flushes any buffered output to the underlying async channel.
+    ///
+    /// The returned future is `Send` so prompts can be driven from within
+    /// spawned tasks (e.g. an SSH session handler).
     #[cfg(feature = "no-tty")]
-    async fn flush(&mut self) -> Result<()>;
+    fn flush(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
 }
 
 pub fn get_default_terminal(

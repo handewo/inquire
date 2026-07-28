@@ -386,7 +386,10 @@ where
         self,
         event: crossterm::event::NoTtyEvent,
         sender: crossterm::event::SenderWriter,
-    ) -> InquireResult<Option<Vec<T>>> {
+    ) -> InquireResult<Option<Vec<T>>>
+    where
+        T: Send,
+    {
         match self.prompt(event, sender).await {
             Ok(answer) => Ok(Some(answer)),
             Err(InquireError::OperationCanceled) => Ok(None),
@@ -410,7 +413,10 @@ where
         self,
         event: crossterm::event::NoTtyEvent,
         sender: crossterm::event::SenderWriter,
-    ) -> InquireResult<Vec<T>> {
+    ) -> InquireResult<Vec<T>>
+    where
+        T: Send,
+    {
         self.raw_prompt(event, sender)
             .await
             .map(|op| op.into_iter().map(|o| o.value).collect())
@@ -444,7 +450,10 @@ where
         self,
         event: crossterm::event::NoTtyEvent,
         sender: crossterm::event::SenderWriter,
-    ) -> InquireResult<Option<Vec<ListOption<T>>>> {
+    ) -> InquireResult<Option<Vec<ListOption<T>>>>
+    where
+        T: Send,
+    {
         match self.raw_prompt(event, sender).await {
             Ok(answer) => Ok(Some(answer)),
             Err(InquireError::OperationCanceled) => Ok(None),
@@ -471,7 +480,10 @@ where
         self,
         event: crossterm::event::NoTtyEvent,
         sender: crossterm::event::SenderWriter,
-    ) -> InquireResult<Vec<ListOption<T>>> {
+    ) -> InquireResult<Vec<ListOption<T>>>
+    where
+        T: Send,
+    {
         let (input_reader, terminal) = get_default_terminal(event, sender)?;
         let mut backend = Backend::new(input_reader, terminal, self.render_config)?;
         self.prompt_with_backend(&mut backend).await
@@ -486,10 +498,13 @@ where
     }
 
     #[cfg(feature = "no-tty")]
-    pub(crate) async fn prompt_with_backend<B: MultiSelectBackend>(
+    pub(crate) async fn prompt_with_backend<B: MultiSelectBackend + Send>(
         self,
         backend: &mut B,
-    ) -> InquireResult<Vec<ListOption<T>>> {
+    ) -> InquireResult<Vec<ListOption<T>>>
+    where
+        T: Send,
+    {
         MultiSelectPrompt::new(self)?.prompt(backend).await
     }
 }

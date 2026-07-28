@@ -27,7 +27,11 @@
 /// assert_eq!(Err(()), parser("yes"));
 /// assert_eq!(Err(()), parser("não"));
 /// ```
+#[cfg(not(feature = "no-tty"))]
 pub type BoolParser<'a> = &'a dyn Fn(&str) -> Result<bool, ()>;
+#[cfg(feature = "no-tty")]
+/// `Send + Sync` variant of [`BoolParser`] used under the `no-tty` feature.
+pub type BoolParser<'a> = &'a (dyn Fn(&str) -> Result<bool, ()> + Send + Sync);
 
 /// Type alias for parsers used in [Confirm](crate::Confirm) prompts.
 ///
@@ -50,7 +54,11 @@ pub type BoolParser<'a> = &'a dyn Fn(&str) -> Result<bool, ()>;
 /// assert_eq!(Err(()), parser("yes"));
 /// assert_eq!(Err(()), parser("não"));
 /// ```
+#[cfg(not(feature = "no-tty"))]
 pub type CustomTypeParser<'a, T> = &'a dyn Fn(&str) -> Result<T, ()>;
+#[cfg(feature = "no-tty")]
+/// `Send + Sync` variant of [`CustomTypeParser`] used under the `no-tty` feature.
+pub type CustomTypeParser<'a, T> = &'a (dyn Fn(&str) -> Result<T, ()> + Send + Sync);
 
 /// Bool formatter used  by default in [Confirm](crate::Confirm) prompts.
 pub const DEFAULT_BOOL_PARSER: BoolParser<'_> = &|ans| {

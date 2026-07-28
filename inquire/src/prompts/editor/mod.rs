@@ -258,7 +258,7 @@ impl<'a> Editor<'a> {
     }
 
     #[cfg(feature = "no-tty")]
-    pub(crate) async fn prompt_with_backend<B: EditorBackend>(
+    pub(crate) async fn prompt_with_backend<B: EditorBackend + Send>(
         self,
         backend: &mut B,
     ) -> InquireResult<String> {
