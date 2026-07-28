@@ -1,8 +1,9 @@
+use std::collections::VecDeque;
 use std::io::{Error, Result};
 
 use crossterm::{
     cursor,
-    event::{self, KeyCode, KeyEvent, KeyModifiers, NoTtyEvent, SenderWriter},
+    event::{self, KeyCode, KeyEvent, KeyEventKind, KeyModifiers, NoTtyEvent, SenderWriter},
     style::{Attribute, Color, Print, SetAttribute, SetBackgroundColor, SetForegroundColor},
     terminal::{self, ClearType},
     Command,
@@ -27,20 +28,31 @@ pub struct CrosstermTerminal {
 }
 
 pub struct CrosstermKeyReader {
+    buffer: VecDeque<Key>,
     event: NoTtyEvent,
 }
 
 impl CrosstermKeyReader {
     pub fn new(event: NoTtyEvent) -> Self {
-        Self { event }
+        Self {
+            buffer: VecDeque::new(),
+            event,
+        }
     }
 }
 
 impl InputReader for CrosstermKeyReader {
     async fn read_key(&mut self) -> InquireResult<Key> {
+        if let Some(key) = self.buffer.pop_front() {
+            return Ok(key);
+        }
+
         loop {
-            if let event::Event::Key(key_event) = event::read(&self.event).await? {
-                return Ok(key_event.into());
+            match event::read(&self.event).await? {
+                event::Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
+                    return Ok(key_event.into());
+                }
+                _ => {}
             }
         }
     }
@@ -137,6 +149,14 @@ impl Terminal for CrosstermTerminal {
         Ok(())
     }
 
+    fn take_buffer(&mut self) -> String {
+        std::mem::take(&mut self.buffer)
+    }
+
+    fn get_writer(&self) -> SenderWriter {
+        self.sender.clone()
+    }
+
     fn get_size(&self) -> Result<Option<super::TerminalSize>> {
         terminal::size(&self.event).map(|(width, height)| super::TerminalSize::new(width, height))
     }
@@ -190,10 +210,15 @@ impl Terminal for CrosstermTerminal {
 
 impl Drop for CrosstermTerminal {
     fn drop(&mut self) {
-        // The buffer is drained by the explicit async teardown
-        // (`FrameRenderer::teardown`) before the terminal is dropped, since we
-        // cannot `.await` the async `flush` here. `disable_raw_mode` is a no-op
-        // in the `no-tty` backend but kept for symmetry with the tty backend.
+        let sender = self.sender.clone();
+        let mut buf = std::mem::take(&mut self.buffer);
+
+        if !buf.is_empty() {
+            tokio::spawn(async move {
+                let _ = sender.write_all(buf.as_bytes()).await;
+                buf.clear();
+            });
+        }
         let _unused = terminal::disable_raw_mode();
     }
 }

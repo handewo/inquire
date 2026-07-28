@@ -207,7 +207,7 @@ async fn run_shell(
         .unwrap();
 
     writer
-        .write_all(&format!("Your answer: {ans}").into_bytes())
+        .write_all(&format!("Your answer: {ans}\r\n").into_bytes())
         .await?;
 
     let ans = Confirm::new("Do you want to move to another country?")
@@ -216,7 +216,7 @@ async fn run_shell(
         .unwrap();
 
     writer
-        .write_all(&format!("Your answer: {ans}").into_bytes())
+        .write_all(&format!("Your answer: {ans}\r\n").into_bytes())
         .await?;
 
     let ans = Confirm {
@@ -246,7 +246,7 @@ async fn run_shell(
     .unwrap();
 
     writer
-        .write_all(&format!("Your answer: {ans}").into_bytes())
+        .write_all(&format!("Your answer: {ans}\r\n").into_bytes())
         .await?;
     tx_status.send(1).await?;
     Ok(())

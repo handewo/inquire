@@ -266,10 +266,13 @@ where
     /// output buffer, without flushing. Flushing is done by the public
     /// `finish_current_frame` wrappers, which differ only in whether the flush
     /// is synchronous (tty) or asynchronous (`no-tty`).
-    fn finish_current_frame_buffered(&mut self, add_empty_line: bool) -> io::Result<()> {
+    fn finish_current_frame_buffered(
+        &mut self,
+        add_empty_line: bool,
+    ) -> io::Result<Option<FrameState>> {
         let (last_rendered_frame, mut current_frame) = match std::mem::take(&mut self.state) {
             RenderState::Rendered(_) | RenderState::Initial => {
-                return Ok(());
+                return Ok(None);
             }
             RenderState::ActiveRender {
                 last_rendered_frame,
@@ -336,36 +339,31 @@ where
 
         self.terminal.cursor_show()?;
 
-        self.state = RenderState::Rendered(current_frame);
-
-        Ok(())
+        Ok(Some(current_frame))
     }
 
     /// Renders the current frame and flushes it to the terminal.
     #[cfg(not(feature = "no-tty"))]
     pub fn finish_current_frame(&mut self, add_empty_line: bool) -> io::Result<()> {
-        self.finish_current_frame_buffered(add_empty_line)?;
-        self.terminal.flush()
+        let current_frame = match self.finish_current_frame_buffered(add_empty_line)? {
+            Some(f) => f,
+            None => return Ok(()),
+        };
+        self.terminal.flush()?;
+        self.state = RenderState::Rendered(current_frame);
+        Ok(())
     }
 
     /// Renders the current frame and flushes it to the async output channel.
     #[cfg(feature = "no-tty")]
     pub async fn finish_current_frame(&mut self, add_empty_line: bool) -> io::Result<()> {
-        self.finish_current_frame_buffered(add_empty_line)?;
-        self.terminal.flush().await
-    }
-
-    /// Explicit end-of-prompt teardown for the `no-tty` backend.
-    ///
-    /// Moves the cursor past the rendered frame, restores cursor visibility and
-    /// flushes the buffered output. This mirrors what `Drop` does for the tty
-    /// backend, but must run explicitly because `Drop` cannot `.await` the async
-    /// flush.
-    #[cfg(feature = "no-tty")]
-    pub async fn teardown(&mut self) -> io::Result<()> {
-        self.move_cursor_to_end_position()?;
-        self.terminal.cursor_show()?;
-        self.terminal.flush().await
+        let current_frame = match self.finish_current_frame_buffered(add_empty_line)? {
+            Some(f) => f,
+            None => return Ok(()),
+        };
+        self.terminal.flush().await?;
+        self.state = RenderState::Rendered(current_frame);
+        Ok(())
     }
 
     fn move_cursor_to_end_position(&mut self) -> io::Result<()> {
@@ -464,14 +462,25 @@ where
     T: Terminal,
 {
     fn drop(&mut self) {
-        // Under `no-tty` the flush is async and cannot be awaited here; the
-        // explicit `teardown` (called on every prompt exit path) already moved
-        // the cursor to its end position, restored it and flushed the buffer.
         #[cfg(not(feature = "no-tty"))]
         {
             let _unused = self.move_cursor_to_end_position();
             let _unused = self.terminal.cursor_show();
             let _unused = self.terminal.flush();
+        }
+        #[cfg(feature = "no-tty")]
+        {
+            let _unused = self.move_cursor_to_end_position();
+            let _unused = self.terminal.cursor_show();
+            let writer = self.terminal.get_writer();
+            let mut buf = self.terminal.take_buffer();
+
+            if !buf.is_empty() {
+                tokio::spawn(async move {
+                    let _ = writer.write_all(buf.as_bytes()).await;
+                    buf.clear();
+                });
+            }
         }
     }
 }

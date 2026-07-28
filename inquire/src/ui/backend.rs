@@ -26,12 +26,6 @@ pub trait CommonBackend: InputReader {
         is_last_frame: bool,
     ) -> impl std::future::Future<Output = Result<()>> + Send;
 
-    /// Explicit end-of-prompt teardown. A no-op for the tty backends (handled by
-    /// `Drop`); under `no-tty` it flushes the final cursor state to the async
-    /// output channel.
-    #[cfg(feature = "no-tty")]
-    fn finish(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
-
     fn render_canceled_prompt(&mut self, prompt: &str) -> Result<()>;
     fn render_prompt_with_answer(&mut self, prompt: &str, answer: &str) -> Result<()>;
 
@@ -278,11 +272,6 @@ where
         self.frame_renderer
             .finish_current_frame(is_last_frame)
             .await
-    }
-
-    #[cfg(feature = "no-tty")]
-    async fn finish(&mut self) -> Result<()> {
-        self.frame_renderer.teardown().await
     }
 
     fn render_canceled_prompt(&mut self, prompt: &str) -> Result<()> {

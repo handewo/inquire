@@ -1002,6 +1002,7 @@ dependencies = [
  "rstest",
  "tempfile",
  "termion",
+ "tokio",
  "unicode-segmentation",
  "unicode-width",
 ]

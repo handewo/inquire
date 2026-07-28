@@ -87,6 +87,12 @@ pub trait Terminal: Sized {
     /// spawned tasks (e.g. an SSH session handler).
     #[cfg(feature = "no-tty")]
     fn flush(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
+
+    #[cfg(feature = "no-tty")]
+    fn get_writer(&self) -> crossterm::event::SenderWriter;
+
+    #[cfg(feature = "no-tty")]
+    fn take_buffer(&mut self) -> String;
 }
 
 pub fn get_default_terminal(
