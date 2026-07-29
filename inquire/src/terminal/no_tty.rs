@@ -211,13 +211,13 @@ impl Terminal for CrosstermTerminal {
 impl Drop for CrosstermTerminal {
     fn drop(&mut self) {
         let sender = self.sender.clone();
-        let mut buf = std::mem::take(&mut self.buffer);
+        let buf = std::mem::take(&mut self.buffer);
 
         if !buf.is_empty() {
-            tokio::spawn(async move {
-                let _ = sender.write_all(buf.as_bytes()).await;
-                buf.clear();
+            let h = std::thread::spawn(move || {
+                let _ = sender.blocking_write_all(buf.as_bytes());
             });
+            let _ = h.join();
         }
         let _unused = terminal::disable_raw_mode();
     }

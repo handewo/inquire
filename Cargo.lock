@@ -381,7 +381,7 @@ dependencies = [
 [[package]]
 name = "crossterm"
 version = "0.29.0"
-source = "git+https://github.com/handewo/crossterm.git#a3571fa28eee85645977fae531a6474cf5a66bcd"
+source = "git+https://github.com/handewo/crossterm.git#4d94cedf51a9c46d4fb9d059d0c326c6ff2fa65a"
 dependencies = [
  "bitflags",
  "bytes",
@@ -1002,7 +1002,6 @@ dependencies = [
  "rstest",
  "tempfile",
  "termion",
- "tokio",
  "unicode-segmentation",
  "unicode-width",
 ]

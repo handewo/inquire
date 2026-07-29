@@ -203,16 +203,12 @@ where
                             backend.frame_setup()?;
                             backend.render_canceled_prompt(self.message())?;
                             backend.frame_finish(true).await?;
-                            backend.finish().await?;
                             return Err(InquireError::OperationCanceled);
                         }
 
                         ActionResult::NeedsRedraw
                     }
-                    Action::Interrupt => {
-                        backend.finish().await?;
-                        return Err(InquireError::OperationInterrupted);
-                    }
+                    Action::Interrupt => return Err(InquireError::OperationInterrupted),
                     Action::Inner(inner_action) => self.handle(inner_action)?,
                 };
             }
@@ -223,7 +219,6 @@ where
         backend.frame_setup()?;
         backend.render_prompt_with_answer(self.message(), &formatted)?;
         backend.frame_finish(true).await?;
-        backend.finish().await?;
 
         Ok(final_answer)
     }
