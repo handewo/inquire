@@ -366,6 +366,20 @@ where
         Ok(())
     }
 
+    /// Explicit end-of-prompt teardown for the `no-tty` backend.
+    ///
+    /// Moves the cursor past the rendered frame, restores cursor visibility and
+    /// flushes the buffered output. This mirrors what `Drop` does for the tty
+    /// backend, but must run explicitly (and be awaited) because `Drop` cannot
+    /// `.await` the async flush. Running it in-order guarantees the prompt's
+    /// output is fully written before the caller writes anything else.
+    #[cfg(feature = "no-tty")]
+    pub async fn teardown(&mut self) -> io::Result<()> {
+        self.move_cursor_to_end_position()?;
+        self.terminal.cursor_show()?;
+        self.terminal.flush().await
+    }
+
     fn move_cursor_to_end_position(&mut self) -> io::Result<()> {
         self.refresh_terminal_size();
 
@@ -470,8 +484,14 @@ where
         }
         #[cfg(feature = "no-tty")]
         {
-            let _unused = self.move_cursor_to_end_position();
-            let _unused = self.terminal.cursor_show();
+            // Normal exit paths call the awaited `teardown()` (via
+            // `CommonBackend::finish`), which moves the cursor, restores it and
+            // flushes in-order, leaving the buffer empty here. Do NOT re-emit
+            // cursor bytes: that would dirty the buffer again and the only way
+            // to flush it from `Drop` is a fire-and-forget `tokio::spawn`, whose
+            // bytes would race the caller's next write. We only best-effort
+            // flush any residual bytes for abnormal exits (e.g. `?` errors)
+            // where `teardown()` never ran.
             let writer = self.terminal.get_writer();
             let mut buf = self.terminal.take_buffer();
 

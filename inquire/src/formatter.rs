@@ -189,8 +189,9 @@ pub type CustomTypeFormatter<'a, T> = &'a (dyn Fn(T) -> String + Send + Sync);
 #[cfg(feature = "date")]
 #[cfg(not(feature = "no-tty"))]
 pub type DateFormatter<'a> = &'a dyn Fn(chrono::NaiveDate) -> String;
-#[cfg(feature = "no-tty")]
 /// `Send + Sync` variant of [`DateFormatter`] used under the `no-tty` feature.
+#[cfg(feature = "date")]
+#[cfg(feature = "no-tty")]
 pub type DateFormatter<'a> = &'a (dyn Fn(chrono::NaiveDate) -> String + Send + Sync);
 
 /// String formatter used by default in inputs that return a `String` as input.
